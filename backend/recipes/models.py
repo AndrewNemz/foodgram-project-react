@@ -1,10 +1,13 @@
-from django.db import models
 from django.core import validators
+from django.db import models
 
 from users.models import User
 
 
 class Ingredient(models.Model):
+    '''
+    Модель для ингредиентов.
+    '''
     name = models.CharField(
         verbose_name='Название ингредиента',
         max_length=256,
@@ -28,15 +31,25 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
+    '''
+    Модель для тегов.
+    Цвет тэгов обязательно в HEX формате.
+    '''
     name = models.CharField(
         verbose_name='Название',
         unique=True,
         max_length=200,
     )
     colour = models.CharField(
-        verbose_name='Цвет',
+        verbose_name='Цвет HEX формата',
         unique=True,
         max_length=7,
+        validators=[
+            validators.RegexValidator(
+                regex='^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+                message='Введенное значение не является цветом в формате HEX.'
+            )
+        ]
     )
     slug = models.SlugField(
         verbose_name='Слаг',
@@ -48,8 +61,15 @@ class Tag(models.Model):
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
 
+    def __str__(self):
+        return self.name
+
 
 class Recipe(models.Model):
+    '''
+    Модель для рецептов.
+    Время приготовления блюда не меньше 1 минуты.
+    '''
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -99,6 +119,10 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
+    '''
+    Модель для ингредиентов, из которых состоит определенный рецепт.
+    Минимальное количество ингредиентов в рецепте - 1.
+    '''
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -124,8 +148,14 @@ class RecipeIngredient(models.Model):
         verbose_name_plural = 'Количество ингредиентов'
         ordering = ['-id']
 
+    def __str__(self):
+        return self.ingredient.name
+
 
 class Follow(models.Model):
+    '''
+    Модель для подписки на авторов.
+    '''
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -148,8 +178,14 @@ class Follow(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
+    def __str__(self):
+        return f'{self.user} подписаля на автора {self.author}'
+
 
 class FavoriteRecipe(models.Model):
+    '''
+    Модель для добавления рецептов в избранное.
+    '''
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -172,8 +208,14 @@ class FavoriteRecipe(models.Model):
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
 
+    def __str__(self):
+        return f'{self.user} добавил {self.recipe} в избранное'
+
 
 class ShoppingList(models.Model):
+    '''
+    Модель для шоп-листа для скачивания в формате  TXT/PDF/CSV.
+    '''
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -195,3 +237,6 @@ class ShoppingList(models.Model):
                 fields=['user', 'recipe'], name='unique_shoplist'
             ),
         ]
+
+    def __str__(self):
+        return f'{self.user} добавил {self.recipe} в список для скачивания'
