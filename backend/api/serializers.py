@@ -210,14 +210,30 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
 class ShoppingListSerializer(serializers.ModelSerializer):
     '''
-    Сериализатор для рецептов в Вашем списке.
+    Сериализатор для рецептов в Вашем списке покупок.
     '''
 
     class Meta:
         model = ShoppingList
-        fields = '__all__'                       # либо exclude = ('id',)
+        fields = ('user', 'recipe')
 
-    def show_recipe(self, instance):
+    def validate(self, data):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        recipe = data['recipe']
+        if ShoppingList.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists():
+            raise serializers.ValidationError(
+                {
+                    'status': 'Рецепт уже добвлен в список покупок.'
+                }
+            )
+        return data
+
+    def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
         return ShortRecipeSerializer(
