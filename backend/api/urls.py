@@ -22,17 +22,17 @@ router.register('tags', TagsViewSet, basename='tags')
 
 
 urlpatterns = [
-    path('', include(router.urls)),
     path(
         'users/subscriptions/',
         FollowListView.as_view(),
-        name='subscribers'
+        name='subscriptions'
     ),
     path(
         'users/<int:user_id>/subscribe/',
         FollowViewSet.as_view(),
         name='subscribe'
     ),
+    path('', include(router.urls)),
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
 ]

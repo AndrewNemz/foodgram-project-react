@@ -1,37 +1,32 @@
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.permissions import (SAFE_METHODS, AllowAny,
+                                        IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
 from api.pagination import CustomPagination
 from api.serializers import CustomUserSerializer, FollowSerializer
-from rest_framework.permissions import (
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-    SAFE_METHODS
-)
-from rest_framework.generics import ListAPIView, get_object_or_404
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.viewsets import ReadOnlyModelViewSet, ModelViewSet
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import action
-
-from djoser.views import UserViewSet
+from recipes.models import (FavoriteRecipe, Follow, Ingredient, Recipe,
+                            ShoppingList, Tag)
 from users.models import User
-from recipes.models import Tag, Ingredient, Recipe
-from recipes.models import Follow, FavoriteRecipe, ShoppingList
-from .serializers import (
-    TagSerializer,
-    IngredientSerializer,
-    ShowRecipeSerializer,
-    RecipeSerializer,
-    FavoriteRecipeSerializer,
-    ShoppingListSerializer
 
-)
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrAdminOrReadonly
+from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingListSerializer,
+                          ShowRecipeSerializer, TagSerializer)
 
 
 class CustomUserViewSet(UserViewSet):
+    '''
+    ViewSet для работы с пользователями.
+    '''
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]

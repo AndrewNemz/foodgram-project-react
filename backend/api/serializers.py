@@ -38,7 +38,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(UserSerializer):
     '''
     Сериализатор для просмотра пользователя.
-    is_subscribed - показывает есть ли подписки у пользователя.
+    is_subscribed - показывает есть ли подписка у пользователя
+    на указанного автора.
     '''
     is_subscribed = SerializerMethodField(read_only=True)
 
@@ -57,7 +58,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Follow.objects.filter(user=user, author=obj.id).exists()
+        return Follow.objects.filter(user=user, author=obj).exists()
 
 
 class FollowSerializer(CustomUserSerializer):
@@ -110,7 +111,7 @@ class IngredientSerializer(serializers.ModelSerializer):
     '''
     class Meta:
         model = Ingredient
-        exclude = ('quantity',)
+        fields = ('id', 'name', 'measure_unit')
         read_only_fields = ('__all__',)
 
 

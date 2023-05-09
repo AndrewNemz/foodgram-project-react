@@ -1,16 +1,10 @@
 from django_filters import rest_framework as f
-from recipes.models import Ingredient, Recipe
+from rest_framework.filters import SearchFilter
+from recipes.models import Recipe
 
 
-class IngredientFilter(f.FilterSet):
-    '''
-    Кастомный фильтр для тэгов.
-    '''
-    name = f.CharFilter(lookup_expr='startswith')
-
-    class Meta:
-        model = Ingredient
-        fields = ('name',)
+class IngredientFilter(SearchFilter):
+    search_param = 'name'
 
 
 class RecipeFilter(f.FilterSet):
