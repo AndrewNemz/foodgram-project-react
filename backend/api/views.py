@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse, FileResponse
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
@@ -13,7 +14,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from api.pagination import CustomPagination
 from api.serializers import CustomUserSerializer, FollowSerializer
 from recipes.models import (FavoriteRecipe, Follow, Ingredient, Recipe,
-                            ShoppingList, Tag)
+                            ShoppingList, Tag, RecipeIngredient)
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -172,3 +173,31 @@ class RecipeViewSet(ModelViewSet):
     def delete_shopping_cart(self, request, pk):
         return self.delete_method_for_actions(
             request=request, pk=pk, model=ShoppingList)
+
+    @action(
+        detail=False,
+        methods=['GET'],
+        permission_classes=(IsAuthenticated,)
+    )
+    def download_shopping_cart(self, request):
+        user = request.user
+        purchases = ShoppingList.objects.filter(user=user)
+        file = 'shopping-list.txt'
+        with open(file, 'w') as f:
+            shop_cart = dict()
+            for purchase in purchases:
+                ingredients = RecipeIngredient.objects.filter(
+                    recipe=purchase.recipe.id
+                )
+                for r in ingredients:
+                    i = Ingredient.objects.get(pk=r.ingredient.id)
+                    point_name = f'{i.name} ({i.measure_unit})'
+                    if point_name in shop_cart.keys():
+                        shop_cart[point_name] += r.amount
+                    else:
+                        shop_cart[point_name] = r.amount
+
+            for name, amount in shop_cart.items():
+                f.write(f'* {name} - {amount}\n')
+
+        return FileResponse(open(file, 'rb'), as_attachment=True)
