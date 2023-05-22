@@ -12,3 +12,4 @@ Pillow==8.3.1
 djoser==2.1.0
 drf-extra-fields==3.4.0
 django-filter==22.1
+sorl-thumbnail==12.9.0

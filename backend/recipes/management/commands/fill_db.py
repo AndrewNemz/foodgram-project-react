@@ -1,42 +1,30 @@
+import contextlib
 import csv
-import os
 
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-
+from django.core.management import BaseCommand
 from recipes.models import Ingredient
-
-DATA_ROOT = os.path.join(settings.BASE_DIR, 'data')
 
 
 class Command(BaseCommand):
     """
-    Добавляем ингредиенты из файла CSV
+    Наполнение базы данных данными из ingredients.csv.
+    Команда - pyhton manage.py fill_db.
     """
-    help = 'Загркузка данных базы данных из csv-файла ингредиентов'
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            'filename',
-            default='ingredients.csv',
-            nargs='?',
-            type=str
-        )
-
     def handle(self, *args, **options):
-        try:
-            with open(
-                os.path.join(DATA_ROOT, options['filename']),
-                'r',
-                encoding='utf-8'
-            ) as f:
-                data = csv.reader(f)
-                for row in data:
-                    name, measure_unit = row
-                    Ingredient.objects.get_or_create(
-                        name=name,
-                        measure_unit=measure_unit
-                    )
-        except FileNotFoundError:
-            raise CommandError('Добавьте файл ingredients в директорию data')
-        print('Загрузка успешно завершена.')
+
+        p = 'data/'
+        print('Загрузка началась')
+
+        with contextlib.ExitStack() as stack:
+            ingredients = csv.DictReader(
+                stack.enter_context(open(f'{p}ingredients.csv', 'r'))
+            )
+
+            for row in ingredients:
+                name, measure_unit = row
+                Ingredient.objects.get_or_create(
+                    name=name,
+                    measure_unit=measure_unit
+                )
+
+        print('Загрузка успешно завершена')

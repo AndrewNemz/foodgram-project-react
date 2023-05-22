@@ -1,22 +1,31 @@
 from django_filters import rest_framework as f
-from rest_framework.filters import SearchFilter
 
-from recipes.models import Recipe
+from recipes.models import Ingredient, Recipe
 
 
-class IngredientFilter(SearchFilter):
-    search_param = 'name'
+class IngredientFilter(f.FilterSet):
+    '''
+    Кастомный фильтр для модели ингредиентов.
+    Поиск по имени.
+    '''
+    name = f.CharFilter(lookup_expr='startswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
 
 
 class RecipeFilter(f.FilterSet):
     """
-    Кастомный фильтр для рецептов.
-    Поиск по тэгам, избранному и нахождению в списке покупок.
+    Кастомный фильтр для модели рецептов.
     """
-    tags = f.AllValuesMultipleFilter(field_name='tags__slug')
+    tags = f.AllValuesMultipleFilter(
+        field_name='tags__slug',
+        lookup_expr='icontains',
+    )
     is_favorited = f.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_list = f.BooleanFilter(
-        method='filter_is_in_shopping_cart'
+        method='filter_is_in_shopping_list'
     )
 
     class Meta:

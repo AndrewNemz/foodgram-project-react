@@ -1,5 +1,5 @@
+from django.http import FileResponse, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse, FileResponse
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
@@ -14,11 +14,11 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from api.pagination import CustomPagination
 from api.serializers import CustomUserSerializer, FollowSerializer
 from recipes.models import (FavoriteRecipe, Follow, Ingredient, Recipe,
-                            ShoppingList, Tag, RecipeIngredient)
+                            RecipeIngredient, ShoppingList, Tag)
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAuthorOrAdminOrReadonly
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingListSerializer,
                           ShowRecipeSerializer, TagSerializer)
@@ -109,10 +109,9 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
     ViewSet для работы с ингредиентами.
     """
     queryset = Ingredient.objects.all()
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
-    filter_backends = [IngredientFilter]
-    search_fields = ('^name',)
+    filter_class = [IngredientFilter]
 
 
 class RecipeViewSet(ModelViewSet):
@@ -121,7 +120,7 @@ class RecipeViewSet(ModelViewSet):
     Для анонимов разрешен только просмотр рецептов.
     """
     queryset = Recipe.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
     pagination_class = CustomPagination
