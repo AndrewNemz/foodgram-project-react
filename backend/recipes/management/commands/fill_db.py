@@ -1,30 +1,26 @@
-import contextlib
 import csv
 
-from django.core.management import BaseCommand
+from django.core.management.base import BaseCommand
+
 from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
-    """
-    Наполнение базы данных данными из ingredients.csv.
-    Команда - pyhton manage.py fill_db.
-    """
+    help = 'Импорт данных из csv в модель Ingredient'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--path', type=str, help='Путь к файлу')
+
     def handle(self, *args, **options):
+        print('Загрузка данными базы данных началась.')
+        file_path = 'data/ingredients.csv'
+        with open(file_path, 'r', encoding='utf-8') as csv_file:
+            reader = csv.reader(csv_file)
 
-        p = 'data/'
-        print('Загрузка началась')
-
-        with contextlib.ExitStack() as stack:
-            ingredients = csv.DictReader(
-                stack.enter_context(open(f'{p}ingredients.csv', 'r'))
-            )
-
-            for row in ingredients:
-                name, measure_unit = row
-                Ingredient.objects.get_or_create(
-                    name=name,
-                    measure_unit=measure_unit
+            for row in reader:
+                obj, created = Ingredient.objects.get_or_create(
+                    name=row[0],
+                    measure_unit=row[1],
                 )
 
-        print('Загрузка успешно завершена')
+        print('Загрузка завершена.')
