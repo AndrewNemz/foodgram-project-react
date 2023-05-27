@@ -36,7 +36,7 @@ class CustomUserViewSet(UserViewSet):
 
 class FollowViewSet(APIView):
     """
-    APIView для добавления и удаления подписки на автора
+    APIView для добавления и удаления подписки на автора.
     """
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
@@ -44,6 +44,7 @@ class FollowViewSet(APIView):
 
     def post(self, request, *args, **kwargs):
         user_id = self.kwargs.get('user_id')
+        author = get_object_or_404(User, id=user_id)
         if user_id == request.user.id:
             return Response(
                 {'error': 'Нельзя подписаться на себя'},
@@ -57,7 +58,6 @@ class FollowViewSet(APIView):
                 {'error': 'Вы уже подписаны на пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        author = get_object_or_404(User, id=user_id)
         Follow.objects.create(
             user=request.user,
             author_id=user_id
@@ -69,14 +69,18 @@ class FollowViewSet(APIView):
 
     def delete(self, request, *args, **kwargs):
         user_id = self.kwargs.get('user_id')
-        get_object_or_404(User, id=user_id)
+        author = get_object_or_404(User, id=user_id)
         subscription = Follow.objects.filter(
             user=request.user,
             author_id=user_id
         )
         if subscription:
             subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'message': 'Вы отписались от'
+                            f'пользователя {author.username}'},
+                status=status.HTTP_204_NO_CONTENT
+            )
         return Response(
             {'error': 'Вы не подписаны на пользователя'},
             status=status.HTTP_400_BAD_REQUEST
@@ -85,14 +89,15 @@ class FollowViewSet(APIView):
 
 class FollowListView(ListAPIView):
     """
-    APIView для просмотра подписок.
+    ListAPIView для вывода полей модели - подписок пользователя.
     """
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)
+        author = self.request.user
+        return User.objects.all().filter(following__user=author)
 
 
 class TagsViewSet(ReadOnlyModelViewSet):
@@ -102,22 +107,26 @@ class TagsViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
+    pagination_class = CustomPagination
 
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
     """
     ViewSet для работы с ингредиентами.
+    Есть возможность поиска по имени.
     """
     queryset = Ingredient.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
+    filter_backends = [DjangoFilterBackend]
     filter_class = [IngredientFilter]
+    pagination_class = CustomPagination
 
 
 class RecipeViewSet(ModelViewSet):
     """
     ViewSet для работы с рецептами.
-    Для анонимов разрешен только просмотр рецептов.
+    Для неавторизованных пользователей доступен только просмотр рецептов.
     """
     queryset = Recipe.objects.all()
     permission_classes = [IsAuthorOrReadOnly]
@@ -162,8 +171,11 @@ class RecipeViewSet(ModelViewSet):
         return self.delete_method_for_actions(
             request=request, pk=pk, model=FavoriteRecipe)
 
-    @action(detail=True, methods=["POST"],
-            permission_classes=[IsAuthenticated])
+    @action(
+            detail=True,
+            methods=["POST"],
+            permission_classes=[IsAuthenticated]
+    )
     def shopping_cart(self, request, pk):
         return self.post_method_for_actions(
             request=request, pk=pk, serializers=ShoppingListSerializer)
