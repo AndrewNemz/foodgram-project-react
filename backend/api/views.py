@@ -121,6 +121,7 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filter_class = [IngredientFilter]
     pagination_class = CustomPagination
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(ModelViewSet):
