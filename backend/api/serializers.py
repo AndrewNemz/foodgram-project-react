@@ -108,17 +108,15 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'colour', 'slug',)
-        read_only_fields = ('__all__',)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     '''
-    Сериализатор для сведений об ингредиентах.
+   Сериализатор для сведений об ингредиентах.
     '''
     class Meta:
         model = Ingredient
         exclude = ('quantity',)
-        read_only_fields = ('__all__',)
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -126,15 +124,15 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     Сериализатор для сведений о количестве определенных ингредиентов
     в рецепте.
     '''
-    id = serializers.ReadOnlyField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     name = serializers.ReadOnlyField(source='ingredient.name')
-    measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit'
+    measure_unit = serializers.ReadOnlyField(
+        source='ingredient.measure_unit'
     )
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name', 'amount', 'measurement_unit',)
+        fields = ('id', 'name', 'amount', 'measure_unit')
 
 
 class AddIngredientSerializer(serializers.ModelSerializer):
@@ -156,9 +154,10 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
     находящиеся в списке покупок.
     '''
     is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_list = serializers.SerializerMethodField(read_only=True)
-    author = CustomUserSerializer(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
+    is_in_shopping_list = serializers.SerializerMethodField()
+    ingredients = serializers.SerializerMethodField()
+    author = CustomUserSerializer()
+    tags = TagSerializer(many=True)
 
     class Meta:
         model = Recipe
@@ -278,8 +277,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         exclude = ('pub_date',)
 
-    def validate_ingredients(self, data):
-        ingredients = data
+    def validate(self, data):
+        ingredients = data['ingredients']
         ingredients_list = []
         for ingredient in ingredients:
             ingredient_id = ingredient['id']
@@ -299,10 +298,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        return data
-
-    def validate_tags(self, data):
-        tags = data
+        tags = data['tags']
         tag_list = []
         if not tags:
             raise serializers.ValidationError(
@@ -321,6 +317,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             tag_list.append(tag)
 
         return data
+                 
 
     @staticmethod
     def create_ingredients(ingredients, recipe):
@@ -336,7 +333,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe.tags.add(tag)
 
     def create(self, validated_data):
-        # author = self.context.get('request').user
+        #  author = self.context.get('request').user
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)

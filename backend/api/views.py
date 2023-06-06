@@ -107,8 +107,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
-    pagination_class = CustomPagination
-
+    pagination_class = None
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
     """
@@ -118,9 +117,8 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = IngredientSerializer
-    filter_backends = [DjangoFilterBackend]
-    filter_class = [IngredientFilter]
-    pagination_class = CustomPagination
+    filter_backends = [IngredientFilter]
+    pagination_class = None
     search_fields = ('^name',)
 
 
