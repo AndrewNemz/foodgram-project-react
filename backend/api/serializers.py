@@ -154,10 +154,10 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
     находящиеся в списке покупок.
     '''
     is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_list = serializers.SerializerMethodField()
-    ingredients = serializers.SerializerMethodField()
-    author = CustomUserSerializer()
-    tags = TagSerializer(many=True)
+    is_in_shopping_list = serializers.SerializerMethodField(read_only=True)
+    ingredients = serializers.SerializerMethodField(read_only=True)
+    author = CustomUserSerializer(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Recipe
@@ -185,13 +185,10 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
         return user.favorites.filter(recipe=obj).exists()
 
     def get_is_in_shopping_list(self, obj):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
+        user = self.context.get('request').user
+        if user.is_anonymous:
             return False
-        return ShoppingList.objects.filter(
-            user=request.user,
-            recipe=obj
-        ).exists()
+        return user.shop_list.filter(recipe=obj).exists()
 
 
 class FavoriteRecipeSerializer(serializers.ModelSerializer):
@@ -235,22 +232,6 @@ class ShoppingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingList
         fields = ('user', 'recipe')
-
-    def validate(self, data):
-        request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        recipe = data['recipe']
-        if ShoppingList.objects.filter(
-            user=request.user,
-            recipe=recipe
-        ).exists():
-            raise serializers.ValidationError(
-                {
-                    'status': 'Рецепт уже добвлен в список покупок.'
-                }
-            )
-        return data
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -333,10 +314,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe.tags.add(tag)
 
     def create(self, validated_data):
-        #  author = self.context.get('request').user
+        author = self.context.get('request').user
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(author=author, **validated_data)
         self.create_tags(tags, recipe)
         self.create_ingredients(ingredients, recipe)
         return recipe
