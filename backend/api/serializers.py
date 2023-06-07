@@ -233,6 +233,22 @@ class ShoppingListSerializer(serializers.ModelSerializer):
         model = ShoppingList
         fields = ('user', 'recipe')
 
+    def validate(self, data):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+        recipe = data['recipe']
+        if ShoppingList.objects.filter(
+            user=request.user,
+            recipe=recipe
+        ).exists():
+            raise serializers.ValidationError(
+                {
+                    'status': 'Рецепт уже добвлен в список покупок.'
+                }
+            )
+        return data
+
     def to_representation(self, instance):
         request = self.context.get('request')
         context = {'request': request}
@@ -314,10 +330,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe.tags.add(tag)
 
     def create(self, validated_data):
-        author = self.context.get('request').user
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
-        recipe = Recipe.objects.create(author=author, **validated_data)
+        recipe = Recipe.objects.create(**validated_data)
         self.create_tags(tags, recipe)
         self.create_ingredients(ingredients, recipe)
         return recipe
