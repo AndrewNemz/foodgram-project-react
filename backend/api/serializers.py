@@ -314,7 +314,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             tag_list.append(tag)
 
         return data
-                 
 
     @staticmethod
     def create_ingredients(ingredients, recipe):

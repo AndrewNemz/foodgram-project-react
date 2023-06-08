@@ -1,4 +1,4 @@
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -108,6 +108,7 @@ class TagsViewSet(ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     serializer_class = TagSerializer
     pagination_class = None
+
 
 class IngredientsViewSet(ReadOnlyModelViewSet):
     """
