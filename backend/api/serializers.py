@@ -150,11 +150,11 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
     '''
     Сериализатор для отображения рецептов.
     is_favorited - показывает есть ли рецепты, находящиеся в списке избранного.
-    is_in_shopping_list - показывает есть ли рецепты,
+    is_in_shopping_cart - показывает есть ли рецепты,
     находящиеся в списке покупок.
     '''
     is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_list = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
     author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -167,7 +167,7 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
             'author',
             'ingredients',
             'is_favorited',
-            'is_in_shopping_list',
+            'is_in_shopping_cart',
             'name',
             'image',
             'text',
@@ -184,7 +184,7 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
             return False
         return user.favorites.filter(recipe=obj).exists()
 
-    def get_is_in_shopping_list(self, obj):
+    def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
