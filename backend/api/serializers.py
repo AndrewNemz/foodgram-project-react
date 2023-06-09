@@ -124,7 +124,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     Сериализатор для сведений о количестве определенных ингредиентов
     в рецепте.
     '''
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measure_unit = serializers.ReadOnlyField(
         source='ingredient.measure_unit'
@@ -155,7 +155,7 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
     '''
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-    ingredients = serializers.SerializerMethodField(read_only=True)
+    ingredients = RecipeIngredientSerializer(many=True, read_only=True, source='ingredient_amount')
     author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
 
@@ -173,10 +173,6 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time',
         )
-
-    def get_ingredients(self, obj):
-        queryset = RecipeIngredient.objects.filter(recipe=obj)
-        return RecipeIngredientSerializer(queryset, many=True).data
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
@@ -317,11 +313,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create_ingredients(ingredients, recipe):
+        ingredient_list = []
         for ingredient in ingredients:
-            RecipeIngredient.objects.create(
-                recipe=recipe, ingredient=ingredient['id'],
-                amount=ingredient['amount']
+            ingredient_list.append(
+                RecipeIngredient(
+                    recipe=recipe, ingredient=ingredient['id'],
+                    amount=ingredient['amount']
+                )
             )
+        RecipeIngredient.objects.bulk_create(ingredient_list)
 
     @staticmethod
     def create_tags(tags, recipe):

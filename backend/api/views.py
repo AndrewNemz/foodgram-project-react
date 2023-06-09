@@ -16,7 +16,6 @@ from api.serializers import CustomUserSerializer, FollowSerializer
 from recipes.models import (FavoriteRecipe, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingList, Tag)
 from users.models import User
-
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
@@ -74,7 +73,7 @@ class FollowViewSet(APIView):
             user=request.user,
             author_id=user_id
         )
-        if subscription:
+        if subscription.exists():
             subscription.delete()
             return Response(
                 {'message': 'Вы отписались от'
