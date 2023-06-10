@@ -21,6 +21,8 @@ from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingListSerializer,
                           ShowRecipeSerializer, TagSerializer)
+from django.http import HttpResponse
+from django.db.models import Sum, F
 
 
 class CustomUserViewSet(UserViewSet):
@@ -191,23 +193,25 @@ class RecipeViewSet(ModelViewSet):
     )
     def download_shopping_cart(self, request):
         user = request.user
-        purchases = ShoppingList.objects.filter(user=user)
-        file = 'shopping-list.txt'
-        with open(file, 'w') as f:
-            shop_cart = dict()
-            for purchase in purchases:
-                ingredients = RecipeIngredient.objects.filter(
-                    recipe=purchase.recipe.id
-                )
-                for r in ingredients:
-                    i = Ingredient.objects.get(pk=r.ingredient.id)
-                    point_name = f'{i.name} ({i.measure_unit})'
-                    if point_name in shop_cart.keys():
-                        shop_cart[point_name] += r.amount
-                    else:
-                        shop_cart[point_name] = r.amount
+        ingredients = RecipeIngredient.objects.filter(
+            recipe__shop_list__user=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measure_unit'
+        ).annotate(amount=Sum('amount')).order_by()
 
-            for name, amount in shop_cart.items():
-                f.write(f'* {name} - {amount}\n')
+        shopping_list = (
+            f'Список покупок для: {user.get_full_name()}\n\n'
+        )
+        shopping_list += '\n'.join([
+            f'- {ingredient["ingredient__name"]} '
+            f'({ingredient["ingredient__measure_unit"]})'
+            f' - {ingredient["amount"]}'
+            for ingredient in ingredients
+        ])
 
-        return FileResponse(open(file, 'rb'), as_attachment=True)
+        filename = 'shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+
+        return response
