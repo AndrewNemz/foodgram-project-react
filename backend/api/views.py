@@ -1,4 +1,5 @@
-from django.http import FileResponse
+from django.db.models import Sum
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -21,8 +22,6 @@ from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
                           RecipeSerializer, ShoppingListSerializer,
                           ShowRecipeSerializer, TagSerializer)
-from django.http import HttpResponse
-from django.db.models import Sum, F
 
 
 class CustomUserViewSet(UserViewSet):
