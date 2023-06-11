@@ -16,7 +16,7 @@ drf-extra-fields==3.4.0
 flake8==5.0.4
 idna==3.4
 importlib-metadata==1.7.0
-isort==5.11.5
+# isort==5.11.5
 itypes==1.2.0
 Jinja2==3.1.2
 MarkupSafe==2.1.2
