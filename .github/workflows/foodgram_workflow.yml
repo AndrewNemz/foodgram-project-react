@@ -79,5 +79,5 @@ jobs:
             sudo docker-compose exec -T backend python manage.py makemigrations
             sudo docker-compose exec -T backend python manage.py migrate
             sudo docker-compose exec -T backend python manage.py fill_db
-            sudo docker-compose exec -T backend python manage.py fill_db_tags
+            sudo docker-compose exec -T backend python manage.py fil_db_tags
             sudo docker-compose exec -T backend python manage.py collectstatic --no-input
