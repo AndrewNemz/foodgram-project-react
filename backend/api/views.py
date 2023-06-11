@@ -196,7 +196,7 @@ class RecipeViewSet(ModelViewSet):
             recipe__shop_list__user=request.user
         ).values(
             'ingredient__name',
-            'ingredient__measure_unit'
+            'ingredient__measurement_unit'
         ).annotate(ingredient_amount=Sum('amount')).order_by()
 
         shopping_list = (
@@ -204,7 +204,7 @@ class RecipeViewSet(ModelViewSet):
         )
         shopping_list += '\n'.join([
             f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__measure_unit"]})'
+            f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["ingredient_amount"]}'
             for ingredient in ingredients
         ])

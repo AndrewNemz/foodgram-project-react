@@ -19,10 +19,10 @@ class Command(BaseCommand):
             ingredients = csv.reader(csv_file)
 
             for row in ingredients:
-                name, measure_unit = row
+                name, measurement_unit = row
                 Ingredient.objects.get_or_create(
                     name=name,
-                    measure_unit=measure_unit
+                    measurement_unit=measurement_unit
                 )
 
         print('Загрузка успешно завершена')
