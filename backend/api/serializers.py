@@ -155,7 +155,11 @@ class ShowRecipeSerializer(serializers.ModelSerializer):
     '''
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-    ingredients = RecipeIngredientSerializer(many=True, read_only=True, source='ingredient_amount')
+    ingredients = RecipeIngredientSerializer(
+        many=True,
+        read_only=True,
+        source='ingredient_amount'
+    )
     author = CustomUserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
 
@@ -295,10 +299,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         tag_list = []
         if not tags:
             raise serializers.ValidationError(
-                    {
-                        'tags': 'Для Вашего рецепта нужно указать тэг.'
-                    }
-                )
+                {
+                    'tags': 'Для Вашего рецепта нужно указать тэг.'
+                }
+            )
 
         for tag in tags:
             if tag in tag_list:

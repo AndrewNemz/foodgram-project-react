@@ -172,9 +172,9 @@ class RecipeViewSet(ModelViewSet):
             request=request, pk=pk, model=FavoriteRecipe)
 
     @action(
-            detail=True,
-            methods=["POST"],
-            permission_classes=[IsAuthenticated]
+        detail=True,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk):
         return self.post_method_for_actions(
